@@ -4,8 +4,11 @@ import 'dotenv/config';
 import express from 'express';
 import { createServer } from 'http';
 import log from 'debug';
-import { listSubmission } from './controller/submission';
+// import { listSubmission } from './controller/submission';
+import { getFormStats, getCandidates, getFormStatsDetail, getAllSubmissionsRaw } from './controller/stats';
 import { attach } from './config/express';
+import { initialProcess } from './lib/odkData';
+import './lib/cron';
 
 const debug = log('app');
 const app = express();
@@ -19,10 +22,13 @@ server.listen(port, startingMsg);
 attach(app);
 
 
-app.get('/api/submissions', listSubmission);
+app.get('/api/submissions', getAllSubmissionsRaw);
 
+app.get('/api/stats/:dash_id', getFormStats);
+app.get('/api/candidates/:dash_id', getCandidates);
+app.get('/api/form-stats-detail/:dash_id', getFormStatsDetail);
 
-
+initialProcess();
 // ensure the process terminates gracefully when an error occurs.
 process.on('uncaughtException', (e) => {
   console.log('process.onUncaughException: %o', e);

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Card } from "@/components/ui/card";
 import { Candidate } from "@/types/candidate";
 import { mean, min, max, quartiles } from "./statistics";
@@ -14,9 +15,9 @@ export function AdvancedStats({ candidates, threshold }: AdvancedStatsProps) {
   // Calcul admis/refusés et taux de réussite basés sur le pourcentage de réussite partielle
   const scoreKeys = candidates[0] ? Object.keys(candidates[0]).filter((k) => k.startsWith("score_")) : [];
   const getPct = (c: Candidate) => {
-    const scores = scoreKeys.map((k) => Number(c[k])).filter((v) => !isNaN(v));
-    if (!scores.length) return 0;
-    return (scores.reduce((sum, v) => sum + v, 0) / scores.length) * 100;
+    const pourcentage = c.pourcentage
+    if (!pourcentage) return 0;
+    return Number(pourcentage);
   };
   const admitted = candidates.filter((c) => getPct(c) >= threshold);
   const refused = candidates.filter((c) => getPct(c) < threshold);

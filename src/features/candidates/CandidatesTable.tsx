@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
@@ -42,7 +43,10 @@ export function CandidatesTable({ candidates, threshold }: CandidatesTableProps)
   const [minPourcentage, setMinPourcentage] = React.useState(0);
   const [pourcentageSort, setPourcentageSort] = React.useState<'asc' | 'desc' | null>(null);
   const [admissionFilter, setAdmissionFilter] = React.useState<'all' | 'admis' | 'refuses'>('all');
-
+  const [pagination, setPagination] = React.useState({
+    pageIndex: 0,
+    pageSize: 100,
+  });
   // Colonnes dynamiques (fiche_id-)
   const ficheKeys = useMemo(() => {
     const c = candidates[0];
@@ -53,6 +57,12 @@ export function CandidatesTable({ candidates, threshold }: CandidatesTableProps)
     const c = candidates[0];
     return c ? Object.keys(c).filter((k) => k.startsWith("score_")) : [];
   }, [candidates]);
+
+  const getPct = (c: Candidate) => {
+    const pourcentage = c.pourcentage
+    if (!pourcentage) return 0;
+    return Number(pourcentage);
+  };
 
   const columns = useMemo<ColumnDef<Candidate, unknown>[]>(() => [
     {
@@ -89,12 +99,9 @@ export function CandidatesTable({ candidates, threshold }: CandidatesTableProps)
         </div>
       ),
       cell: ({ row }: { row: any }) => {
-        const scores = scoreKeys
-          .map((k) => Number(row.original[k]))
-          .filter((v) => !isNaN(v));
-        const nbQuestions = scores.length;
-        if (nbQuestions === 0) return <span className="text-muted-foreground">-</span>;
-        const pct = (row.original.total_score / nbQuestions) * 100;
+        const { pourcentage } = row.original;
+        if (pourcentage === null || pourcentage === "0") return <span className="text-muted-foreground">-</span>;
+        const pct = Number(pourcentage);
         let color = "text-muted-foreground";
         if (pct >= threshold) color = "text-green-600 font-bold";
         else if (pct >= threshold - 20) color = "text-yellow-600 font-semibold";
@@ -102,18 +109,6 @@ export function CandidatesTable({ candidates, threshold }: CandidatesTableProps)
         return <span className={color}>{pct.toFixed(1)}%</span>;
       },
       size: 100,
-      sortingFn: (rowA: any, rowB: any) => {
-        const getPct = (row: any) => {
-          const scores = scoreKeys
-            .map((k: string) => Number(row.original[k]))
-            .filter((v: number) => !isNaN(v));
-          const nbQuestions = scores.length;
-          if (nbQuestions === 0) return 0;
-          return (row.original.total_score / nbQuestions) * 100;
-        };
-        return getPct(rowA) - getPct(rowB);
-      },
-      enableSorting: true,
     },
     {
       id: "statut",
@@ -122,10 +117,11 @@ export function CandidatesTable({ candidates, threshold }: CandidatesTableProps)
         const scores = scoreKeys
           .map((k) => Number(row.original[k]))
           .filter((v) => !isNaN(v));
-        const total = scores.reduce((sum, v) => sum + v, 0);
+        // const total = scores.reduce((sum, v) => sum + v, 0);
         const nbQuestions = scores.length;
         if (nbQuestions === 0) return <Badge variant="destructive">Echoué</Badge>;
-        const pct = (total / nbQuestions) * 100;
+        const { pourcentage } = row.original;
+        const pct = pourcentage ? Number(pourcentage) : 0; 
         const admitted = pct >= threshold;
         return (
           <Badge variant={admitted ? "default" : "destructive"}>
@@ -161,19 +157,15 @@ export function CandidatesTable({ candidates, threshold }: CandidatesTableProps)
     }
     // Filtre par pourcentage
     data = data.filter((c) => {
-      const scores = scoreKeys.map((k) => Number(c[k])).filter((v) => !isNaN(v));
-      const nbQuestions = scores.length;
-      if (nbQuestions === 0) return false;
-      const pct = (c.total_score / nbQuestions) * 100;
+      if (!c.pourcentage) return false;
+      const pct = c.pourcentage ? Number(c.pourcentage) : 0;
       return pct >= minPourcentage;
     });
     // Filtre par statut d'admission
     if (admissionFilter !== 'all') {
       data = data.filter((c) => {
-        const scores = scoreKeys.map((k) => Number(c[k])).filter((v) => !isNaN(v));
-        const nbQuestions = scores.length;
-        if (nbQuestions === 0) return false;
-        const pct = (c.total_score / nbQuestions) * 100;
+        if (!c.pourcentage) return false;
+        const pct = Number(c.pourcentage);
         if (admissionFilter === 'admis') return pct >= threshold;
         if (admissionFilter === 'refuses') return pct < threshold;
         return true;
@@ -182,12 +174,6 @@ export function CandidatesTable({ candidates, threshold }: CandidatesTableProps)
     // Tri par pourcentage si activé
     if (pourcentageSort) {
       data = [...data].sort((a, b) => {
-        const getPct = (c: Candidate) => {
-          const scores = scoreKeys.map((k) => Number(c[k])).filter((v) => !isNaN(v));
-          const nbQuestions = scores.length;
-          if (nbQuestions === 0) return 0;
-          return (c.total_score / nbQuestions) * 100;
-        };
         return pourcentageSort === 'asc' ? getPct(a) - getPct(b) : getPct(b) - getPct(a);
       });
     }
@@ -198,12 +184,15 @@ export function CandidatesTable({ candidates, threshold }: CandidatesTableProps)
   const table = useReactTable({
     data: filteredCandidates,
     columns,
+    onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     state: {
       globalFilter,
+      pagination
+      
     },
     onGlobalFilterChange: setGlobalFilter,
     columnResizeMode: 'onChange',
@@ -220,8 +209,8 @@ export function CandidatesTable({ candidates, threshold }: CandidatesTableProps)
         post_nom: c.post_nom,
         prenom: c.prenom,
         total_score: c.total_score,
-        statut: c.total_score >= threshold ? "Admis" : "Refusé",
-        ...ficheFields,
+        pourcentage: c.pourcentage,
+        statut: getPct(c) >= threshold ? "Admis" : "Refusé",
       };
     });
     const csv = Papa.unparse(data);
@@ -236,11 +225,12 @@ export function CandidatesTable({ candidates, threshold }: CandidatesTableProps)
     const tableData = filteredCandidates.map((c) => [
       `${c.nom} ${c.post_nom} ${c.prenom}`,
       c.total_score,
-      c.total_score >= threshold ? "Admis" : "Refusé",
+      c.pourcentage,
+      getPct(c) >= threshold ? "Admis" : "Refusé",
       ...ficheKeys.map((k) => c[k] ?? "")
     ]);
     autoTable(doc, {
-      head: [["Nom complet", "Score", "Statut", ...ficheKeys]],
+      head: [["Nom complet", "Score", "Pourcentage", "Statut", ...ficheKeys]],
       body: tableData,
     });
     doc.save("candidats.pdf");
@@ -275,7 +265,7 @@ export function CandidatesTable({ candidates, threshold }: CandidatesTableProps)
             <option value="admis">Admis</option>
             <option value="refuses">Refusés</option>
           </select>
-          <Switch checked={showOnlyFavorites} onCheckedChange={setShowOnlyFavorites} />
+          {/* <Switch checked={showOnlyFavorites} onCheckedChange={setShowOnlyFavorites} /> */}
           <span className="text-sm">Favoris uniquement</span>
           <Button variant="outline" onClick={handleExportCSV}>Exporter CSV</Button>
           <Button variant="outline" onClick={handleExportPDF}>Exporter PDF</Button>
@@ -298,12 +288,12 @@ export function CandidatesTable({ candidates, threshold }: CandidatesTableProps)
             {table.getRowModel().rows.length ? (
               table.getRowModel().rows.map((row: any) => {
                 // Calcul du pourcentage de réussite partielle pour la ligne
-                const scores = scoreKeys
-                  .map((k) => Number(row.original[k]))
-                  .filter((v) => !isNaN(v));
-                const total = scores.reduce((sum, v) => sum + v, 0);
-                const nbQuestions = scores.length;
-                const pct = nbQuestions === 0 ? null : (total / nbQuestions) * 100;
+                // const scores = scoreKeys
+                //   .map((k) => Number(row.original[k]))
+                //   .filter((v) => !isNaN(v));
+                // const total = scores.reduce((sum, v) => sum + v, 0);
+                // const nbQuestions = scores.length;
+                const pct = getPct(row.original);
                 let bg = "";
                 if (pct !== null) {
                   if (pct >= threshold) bg = "bg-green-50 dark:bg-green-900/20";

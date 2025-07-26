@@ -23,17 +23,23 @@ export default function DashboardPage() {
   const { uniqueCandidates = [], error } = useCandidates();
   // const [importedCandidates, setImportedCandidates] = useState<Candidate[] | null>(null);
   // // const candidates = importedCandidates || uniqueCandidates;
-  const [threshold, setThreshold] = useState(50);
+  const [threshold, setThreshold] = useState(60);
   const { addThreshold } = useThresholdHistoryStore();
 
+  const getPct = (c: Candidate) => {
+    const pourcentage = c.pourcentage
+    if (!pourcentage) return 0;
+    return Number(pourcentage);
+  };
   const fetchData = async () => {
     const response = await getFromTest();
-    return response;
+    return response.data;
   };
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["candidate",],
     queryFn: fetchData,
+    refetchInterval: 50000,
   });
   const candidates = (data || uniqueCandidates) as Candidate[];
 
@@ -48,7 +54,7 @@ export default function DashboardPage() {
         <h1 className="text-4xl font-extrabold tracking-tight">Dashboard Recrutement</h1>
         <Button variant="default" onClick={async () => {
           const doc = new jsPDF({ orientation: "landscape" });
-          doc.text("Rapport de Recrutement", 14, 14);
+          doc.text("Rapport de Recrutement des superviseur independant - Equateur", 14, 14);
           // Stats principales
           doc.text(`Candidats: ${candidates?.length}`, 14, 24);
           doc.text(`Admis: ${candidates?.filter(c => c.total_score >= threshold).length}`, 14, 32);
@@ -57,10 +63,11 @@ export default function DashboardPage() {
           const tableData = candidates?.map((c) => [
             `${c.fiche_id.nom} ${c.fiche_id.post_nom} ${c.fiche_id.prenom}`,
             c.total_score,
-            c.total_score >= threshold ? "Admis" : "Refusé",
+            c.pourcentage,
+            getPct(c) >= threshold ? "Admis" : "Refusé",
           ]);
           autoTable(doc, {
-            head: [["Nom complet", "Score", "Statut"]],
+            head: [["Nom complet", "Score", "Pourcentage", "Statut"]],
             body: tableData,
             startY: 48,
           });
@@ -94,16 +101,6 @@ export default function DashboardPage() {
               onChange={(e) => handleThresholdChange(Number(e.target.value))}
               className="w-24"
             />
-            {/* {history.length > 1 && (
-              <div className="flex flex-wrap gap-2 items-center">
-                <span className="font-semibold">Historique :</span>
-                {history.map((h, idx) => (
-                  <Button key={idx} size="sm" variant={idx === history.length - 1 ? "default" : "outline"} disabled={idx === history.length - 1} onClick={() => { setThreshold(h.value); revertTo(idx); }}>
-                    {h.value}
-                  </Button>
-                ))}
-              </div>
-            )} */}
           </div>
         </div>
       </div>

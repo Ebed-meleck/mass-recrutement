@@ -6,8 +6,9 @@ export interface Candidate {
     prenom: string;
     sexe: string;
   };
+  pourcentage: number | null;
   total_score: number;
-  [key: string]: string | number | { [key: string]: any };
+  [key: string]: string | number | null | { [key: string]: any };
 };
 
 export type CandidateStatus = 'admis' | 'refuse'; 
