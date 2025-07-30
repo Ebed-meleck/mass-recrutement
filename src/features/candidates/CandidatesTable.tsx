@@ -267,7 +267,7 @@ export function CandidatesTable({ candidates, threshold }: CandidatesTableProps)
           {/* <Switch checked={showOnlyFavorites} onCheckedChange={setShowOnlyFavorites} /> */}
           <span className="text-sm">Favoris uniquement</span>
           <Button variant="outline" onClick={handleExportCSV}>Exporter CSV</Button>
-          <Button variant="outline" onClick={handleExportPDF}>Exporter Excel</Button>
+          <Button variant="outline" onClick={handleExportExcel}>Exporter Excel</Button>
           <Button variant="outline" onClick={handleExportPDF}>Exporter PDF</Button>
         </div>
       </div>
