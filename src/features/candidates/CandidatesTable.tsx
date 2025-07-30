@@ -30,6 +30,7 @@ import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Candidate } from "@/types/candidate";
+import ExcelExportService from '@/service/excel.service';
 
 interface CandidatesTableProps {
   candidates: Candidate[];
@@ -214,6 +215,10 @@ export function CandidatesTable({ candidates, threshold }: CandidatesTableProps)
     saveAs(blob, "candidats.csv");
   };
 
+  const handleExportExcel = () => {
+    ExcelExportService(filteredCandidates, 'resultat_test_si'); 
+  }
+
   // Export PDF
   const handleExportPDF = () => {
     const doc = new jsPDF();
@@ -262,6 +267,7 @@ export function CandidatesTable({ candidates, threshold }: CandidatesTableProps)
           {/* <Switch checked={showOnlyFavorites} onCheckedChange={setShowOnlyFavorites} /> */}
           <span className="text-sm">Favoris uniquement</span>
           <Button variant="outline" onClick={handleExportCSV}>Exporter CSV</Button>
+          <Button variant="outline" onClick={handleExportPDF}>Exporter Excel</Button>
           <Button variant="outline" onClick={handleExportPDF}>Exporter PDF</Button>
         </div>
       </div>
