@@ -216,7 +216,19 @@ export function CandidatesTable({ candidates, threshold }: CandidatesTableProps)
   };
 
   const handleExportExcel = () => {
-    ExcelExportService(filteredCandidates, 'resultat_test_si'); 
+    const data = filteredCandidates.map((c) => {
+      const fullname =  `${c.fiche_id.nom} ${c.fiche_id.post_nom} ${c.fiche_id.prenom}`
+      return {
+        nom: c.fiche_id.nom,
+        post_nom: c.fiche_id.post_nom,
+        prenom: c.fiche_id.prenom,
+        fullname,
+        total_score: c.total_score,
+        pourcentage: c.pourcentage,
+        statut: getPct(c) >= threshold ? "Admis" : "Refusé",
+      };
+    });
+    ExcelExportService(data, 'resultat_test_si'); 
   }
 
   // Export PDF
