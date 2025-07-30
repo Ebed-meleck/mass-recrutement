@@ -152,7 +152,7 @@ export function CandidatesTable({ candidates, threshold }: CandidatesTableProps)
     let data = candidates;
     if (globalFilter) {
       data = data.filter((c) =>
-        `${c.nom} ${c.post_nom} ${c.prenom}`.toLowerCase().includes(globalFilter.toLowerCase())
+        `${c.fiche_id.nom} ${c.fiche_id.post_nom} ${c.fiche_id.prenom}`.toLowerCase().includes(globalFilter.toLowerCase())
       );
     }
     // Filtre par pourcentage
@@ -189,25 +189,21 @@ export function CandidatesTable({ candidates, threshold }: CandidatesTableProps)
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    // onGlobalFilterChange: setGlobalFilter,
     state: {
-      globalFilter,
       pagination
       
     },
-    onGlobalFilterChange: setGlobalFilter,
     columnResizeMode: 'onChange',
   });
 
   // Export CSV
   const handleExportCSV = () => {
     const data = filteredCandidates.map((c) => {
-      const ficheFields = Object.keys(c)
-        .filter((k) => k.startsWith('fiche_id-'))
-        .reduce((acc, k) => ({ ...acc, [k]: c[k] }), {});
       return {
-        nom: c.nom,
-        post_nom: c.post_nom,
-        prenom: c.prenom,
+        nom: c.fiche_id.nom,
+        post_nom: c.fiche_id.post_nom,
+        prenom: c.fiche_id.prenom,
         total_score: c.total_score,
         pourcentage: c.pourcentage,
         statut: getPct(c) >= threshold ? "Admis" : "Refusé",
@@ -221,16 +217,14 @@ export function CandidatesTable({ candidates, threshold }: CandidatesTableProps)
   // Export PDF
   const handleExportPDF = () => {
     const doc = new jsPDF();
-    const ficheKeys = Object.keys(filteredCandidates[0] || {}).filter((k) => k.startsWith('fiche_id-'));
     const tableData = filteredCandidates.map((c) => [
-      `${c.nom} ${c.post_nom} ${c.prenom}`,
+      `${c.fiche_id.nom} ${c.fiche_id.post_nom} ${c.fiche_id.prenom}`,
       c.total_score,
       c.pourcentage,
       getPct(c) >= threshold ? "Admis" : "Refusé",
-      ...ficheKeys.map((k) => c[k] ?? "")
     ]);
     autoTable(doc, {
-      head: [["Nom complet", "Score", "Pourcentage", "Statut", ...ficheKeys]],
+      head: [["Nom complet", "Score", "Pourcentage", "Statut"]],
       body: tableData,
     });
     doc.save("candidats.pdf");

@@ -42,3 +42,6 @@ next-env.d.ts
 
 # qodo vscode
 .qodo
+liste_si_clean.xlsx
+server/Liste_SI_refacto.xlsx
+server/Liste SI KWILU FINAL.xlsx
