@@ -217,12 +217,12 @@ export function CandidatesTable({ candidates, threshold }: CandidatesTableProps)
 
   const handleExportExcel = () => {
     const data = filteredCandidates.map((c) => {
-      const fullname =  `${c.fiche_id.nom} ${c.fiche_id.post_nom} ${c.fiche_id.prenom}`
       return {
+        id: c.id,
         nom: c.fiche_id.nom,
         post_nom: c.fiche_id.post_nom,
         prenom: c.fiche_id.prenom,
-        fullname,
+        telephone: c.fiche_id.telephone,
         total_score: c.total_score,
         pourcentage: c.pourcentage,
         statut: getPct(c) >= threshold ? "Admis" : "Refusé",
