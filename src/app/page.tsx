@@ -51,7 +51,7 @@ export default function DashboardPage() {
   return (
     <main className="min-h-screen w-full bg-background text-foreground px-4 py-8">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
-        <h1 className="text-4xl font-extrabold tracking-tight">Dashboard Recrutement</h1>
+        <h1 className="text-4xl font-extrabold tracking-tight">Dashboard Recrutement - Equateur</h1>
         <Button variant="default" onClick={async () => {
           const doc = new jsPDF({ orientation: "landscape" });
           doc.text("Rapport de Recrutement des superviseur independant - Equateur", 14, 14);

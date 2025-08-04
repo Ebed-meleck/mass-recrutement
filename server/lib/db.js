@@ -1,7 +1,7 @@
-import { config } from 'dotenv';
+import 'dotenv/config';
 import log from 'debug';
 import  pgPromise from 'pg-promise';
-config();
+
 const debug = log('POSTGRES');
 const initOptions = {
   // Initialization options
